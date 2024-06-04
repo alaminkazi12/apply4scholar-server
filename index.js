@@ -4,12 +4,7 @@ const { MongoClient, ServerApiVersion } = require("mongodb");
 const app = express();
 require("dotenv").config();
 const port = process.env.PORT || 5000;
-
-// apply4scholar;
-// kuwxvLnb76rKlOgK;
-
-console.log(process.env.DB_USER);
-console.log(process.env.DB_PASS);
+app.use(cors());
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.r90hnej.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -26,6 +21,28 @@ async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
+
+    const apply4scholar = client.db("apply4scholar");
+    const scholarshipsCollection = apply4scholar.collection("scholarships");
+
+    app.get("/scholarships", async (req, res) => {
+      const query = req.query;
+      const result = await scholarshipsCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.get("/top-scholarship", async (req, res) => {
+      const options = {
+        sort: {
+          application_fees: 1,
+          post_date: -1,
+        },
+        limit: 6,
+      };
+      const result = await scholarshipsCollection.find({}, options).toArray();
+      res.send(result);
+    });
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
