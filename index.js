@@ -4,6 +4,9 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
 require("dotenv").config();
 const port = process.env.PORT || 5000;
+
+// middlewares to pass data
+app.use(express.json());
 app.use(cors());
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.r90hnej.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -24,6 +27,7 @@ async function run() {
 
     const apply4scholar = client.db("apply4scholar");
     const scholarshipsCollection = apply4scholar.collection("scholarships");
+    const usersCollection = apply4scholar.collection("users");
 
     app.get("/scholarships", async (req, res) => {
       const result = await scholarshipsCollection.find().toArray();
@@ -46,6 +50,18 @@ async function run() {
         limit: 6,
       };
       const result = await scholarshipsCollection.find({}, options).toArray();
+      res.send(result);
+    });
+    //  users related api
+    app.post("/users", async (req, res) => {
+      const user = req.body;
+      const query = { userEmail: user.userEmail };
+      const existingUser = await usersCollection.findOne(query);
+      if (existingUser) {
+        return res.send({ message: "user already exists", insertedId: null });
+      }
+      const result = await usersCollection.insertOne(user);
+
       res.send(result);
     });
 
