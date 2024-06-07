@@ -31,6 +31,7 @@ async function run() {
     const usersCollection = apply4scholar.collection("users");
     const paymnetCollection = apply4scholar.collection("payments");
     const applicationCollection = apply4scholar.collection("application");
+    const reviewCollection = apply4scholar.collection("review");
 
     app.get("/scholarships", async (req, res) => {
       const result = await scholarshipsCollection.find().toArray();
@@ -68,6 +69,43 @@ async function run() {
       const email = req.query.email;
       const query = { userEmail: email };
       const result = await applicationCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    // review related api
+
+    app.post("/review", async (req, res) => {
+      const review = req.body;
+      const result = await reviewCollection.insertOne(review);
+      res.send(result);
+    });
+
+    app.get("/myreviews", async (req, res) => {
+      const email = req.query.email;
+      const query = { userEmail: email };
+      const result = await reviewCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    app.put("/reveiw", async (req, res) => {
+      const data = req.body;
+      const reviewid = data.id;
+      const filter = { _id: new ObjectId(reviewid) };
+      const updateDoc = {
+        $set: {
+          comment: data.comment,
+          rating: data.rating,
+        },
+      };
+
+      const result = await reviewCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+
+    app.delete("/review", async (req, res) => {
+      const id = req.body.id;
+      const filter = { _id: new ObjectId(id) };
+      const result = await reviewCollection.deleteOne(filter);
       res.send(result);
     });
 
