@@ -64,6 +64,13 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/applications", async (req, res) => {
+      const email = req.query.email;
+      const query = { userEmail: email };
+      const result = await applicationCollection.find(query).toArray();
+      res.send(result);
+    });
+
     //  users related api
     app.post("/users", async (req, res) => {
       const user = req.body;
