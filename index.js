@@ -1,8 +1,9 @@
 const express = require("express");
 const cors = require("cors");
+require("dotenv").config();
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
-require("dotenv").config();
+const stripe = require("stripe")(process.env.STRIPE_SECRET);
 const port = process.env.PORT || 5000;
 
 // middlewares to pass data
@@ -28,6 +29,7 @@ async function run() {
     const apply4scholar = client.db("apply4scholar");
     const scholarshipsCollection = apply4scholar.collection("scholarships");
     const usersCollection = apply4scholar.collection("users");
+    const paymnetCollection = apply4scholar.collection("payments");
 
     app.get("/scholarships", async (req, res) => {
       const result = await scholarshipsCollection.find().toArray();
@@ -63,6 +65,26 @@ async function run() {
       const result = await usersCollection.insertOne(user);
 
       res.send(result);
+    });
+
+    // payment intent api
+    app.post("/create-payment-intent", async (req, res) => {
+      const { price } = req.body;
+      const amount = parseInt(price * 100);
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: "usd",
+        payment_method_types: ["card"],
+      });
+      res.send({
+        clientSecret: paymentIntent.client_secret,
+      });
+    });
+
+    app.post("/payments", async (req, res) => {
+      const payment = req.body;
+      const paymentResult = await paymnetCollection.insertOne(payment);
+      res.send(paymentResult);
     });
 
     // Send a ping to confirm a successful connection
