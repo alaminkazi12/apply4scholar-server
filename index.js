@@ -30,6 +30,7 @@ async function run() {
     const scholarshipsCollection = apply4scholar.collection("scholarships");
     const usersCollection = apply4scholar.collection("users");
     const paymnetCollection = apply4scholar.collection("payments");
+    const applicationCollection = apply4scholar.collection("application");
 
     app.get("/scholarships", async (req, res) => {
       const result = await scholarshipsCollection.find().toArray();
@@ -54,6 +55,15 @@ async function run() {
       const result = await scholarshipsCollection.find({}, options).toArray();
       res.send(result);
     });
+
+    // application related api
+
+    app.post("/apply", async (req, res) => {
+      const applicationData = req.body;
+      const result = await applicationCollection.insertOne(applicationData);
+      res.send(result);
+    });
+
     //  users related api
     app.post("/users", async (req, res) => {
       const user = req.body;
