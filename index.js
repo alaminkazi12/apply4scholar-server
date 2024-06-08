@@ -33,6 +33,8 @@ async function run() {
     const applicationCollection = apply4scholar.collection("application");
     const reviewCollection = apply4scholar.collection("review");
 
+    // scholarship related api
+
     app.get("/scholarships", async (req, res) => {
       const result = await scholarshipsCollection.find().toArray();
       res.send(result);
@@ -57,6 +59,38 @@ async function run() {
       res.send(result);
     });
 
+    app.put("/scholarship", async (req, res) => {
+      const data = req.body;
+      console.log(data);
+      const id = data.id;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          university_image: data.photo,
+          application_deadline: data.application_deadline,
+          application_fees: data.application_fees,
+          post_date: data.post_date,
+          scholarship_category: data.scholarship_category,
+          scholarship_description: data.scholarship_description,
+          scholarship_name: data.scholarship_name,
+          service_charge: data.service_charge,
+          stipend: data.stipend,
+          subject_name: data.subject_name,
+          university_location: data.university_location,
+        },
+      };
+
+      const result = await scholarshipsCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+
+    app.delete("/scholarship", async (req, res) => {
+      const id = req.body.id;
+      const filter = { _id: new ObjectId(id) };
+      const result = await scholarshipsCollection.deleteOne(filter);
+      res.send(result);
+    });
+
     // application related api
 
     app.post("/apply", async (req, res) => {
@@ -73,6 +107,11 @@ async function run() {
     });
 
     // review related api
+
+    app.get("/reviews", async (req, res) => {
+      const result = await reviewCollection.find().toArray();
+      res.send(result);
+    });
 
     app.post("/review", async (req, res) => {
       const review = req.body;
