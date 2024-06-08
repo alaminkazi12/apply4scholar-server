@@ -106,6 +106,39 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/all-applied-scholarships", async (req, res) => {
+      const result = await applicationCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.put("/feedback", async (req, res) => {
+      const data = req.body;
+      const id = data.id;
+      const feedback = data.feedback;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          feedback: feedback,
+        },
+      };
+
+      const result = await applicationCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+
+    app.put("/application-status", async (req, res) => {
+      const data = req.body;
+      const id = data.id;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          status: data.status,
+        },
+      };
+      const result = await applicationCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+
     // review related api
 
     app.get("/reviews", async (req, res) => {
