@@ -106,6 +106,26 @@ async function run() {
       res.send(result);
     });
 
+    app.put("/apply/:id", async (req, res) => {
+      const id = req.params.id;
+      const data = req.body;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          degree: data.degree,
+          gender: data.gender,
+          hsc: data.hsc,
+          phone: data.phone,
+          ssc: data.ssc,
+          studyGap: data.studyGap,
+          userAddress: data.userAddress,
+        },
+      };
+
+      const result = await applicationCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+
     app.get("/applications", async (req, res) => {
       const email = req.query.email;
       const query = { userEmail: email };
@@ -143,6 +163,13 @@ async function run() {
         },
       };
       const result = await applicationCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+
+    app.delete("/application/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await applicationCollection.deleteOne(query);
       res.send(result);
     });
 
