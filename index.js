@@ -1,5 +1,7 @@
 const express = require("express");
 const cors = require("cors");
+const jwt = require("jsonwebtoken");
+const cookieParser = require("cookie-parser");
 require("dotenv").config();
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const e = require("express");
@@ -9,7 +11,18 @@ const port = process.env.PORT || 5000;
 
 // middlewares to pass data
 app.use(express.json());
-app.use(cors());
+app.use(cookieParser());
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      // "http://studyscribe-a50b5.web.app",
+      // "http://studyscribe-a50b5.firebaseapp.com",
+      // "https://studyscribe.netlify.app",
+    ],
+    credentials: true,
+  })
+);
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.r90hnej.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -20,6 +33,34 @@ const client = new MongoClient(uri, {
     strict: true,
     deprecationErrors: true,
   },
+});
+
+// middlewares
+const logger = async (req, res, next) => {
+  console.log("called", req.host, req.method, req.url);
+  next();
+};
+
+// jwt related api
+app.post("/jwt", logger, async (req, res) => {
+  const user = req.body;
+  console.log(user);
+  const token = jwt.sign(user, process.env.TOKEN_SECRET, {
+    expiresIn: "1hr",
+  });
+  res
+    .cookie("token", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+    })
+    .send({ success: true });
+});
+
+app.post("/logout", async (req, res) => {
+  const user = req.body;
+  console.log("Logged out", user);
+  res.clearCookie("token", { maxAge: 0 }).send({ success: true });
 });
 
 async function run() {
@@ -218,6 +259,7 @@ async function run() {
     //  users related api
     app.post("/users", async (req, res) => {
       const user = req.body;
+      console.log(req.headers);
       const query = { userEmail: user.userEmail };
       const existingUser = await usersCollection.findOne(query);
       if (existingUser) {
