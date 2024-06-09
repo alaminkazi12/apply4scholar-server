@@ -94,6 +94,42 @@ async function run() {
     const applicationCollection = apply4scholar.collection("application");
     const reviewCollection = apply4scholar.collection("review");
 
+    // verify user role middlewares
+
+    const verifyAdmin = async (req, res, next) => {
+      const email = req.user?.email;
+      const query = { userEmail: email };
+      const user = await usersCollection.findOne(query);
+      const isAdmin = user?.role === "admin";
+      if (!isAdmin) {
+        return res.status(403).send({ message: "forbidden access" });
+      }
+      next();
+    };
+
+    const verifyModerator = async (req, res, next) => {
+      const email = req.user.email;
+      const query = { userEmail: email };
+      const user = await usersCollection.findOne(query);
+      const isModerator = user?.role === "moderator";
+      if (!isModerator) {
+        return res.status(403).send({ message: "forbidden access" });
+      }
+      next();
+    };
+
+    const verifyAdminOrModerator = async (req, res, next) => {
+      const email = req.user?.email;
+      const query = { userEmail: email };
+      const user = await usersCollection.findOne(query);
+      const isModerator = user?.role === "moderator";
+      const isAdmin = user?.role === "admin";
+      if (!isModerator || !isModerator) {
+        return res.status(403).send({ message: "forbidden access" });
+      }
+      next();
+    };
+
     // scholarship related api
 
     app.get("/scholarships", async (req, res) => {
@@ -101,11 +137,17 @@ async function run() {
       res.send(result);
     });
 
-    app.post("/scholarship", async (req, res) => {
-      const query = req.body;
-      const result = await scholarshipsCollection.insertOne(query);
-      res.send(result);
-    });
+    app.post(
+      "/scholarship",
+      logger,
+      verifyToken,
+      verifyAdminOrModerator,
+      async (req, res) => {
+        const query = req.body;
+        const result = await scholarshipsCollection.insertOne(query);
+        res.send(result);
+      }
+    );
 
     app.get("/scholarships/:id", logger, verifyToken, async (req, res) => {
       const id = req.params.id;
@@ -133,17 +175,21 @@ async function run() {
       const filter = { _id: new ObjectId(id) };
       const updateDoc = {
         $set: {
-          university_image: data.photo,
-          application_deadline: data.application_deadline,
-          application_fees: data.application_fees,
-          post_date: data.post_date,
-          scholarship_category: data.scholarship_category,
-          scholarship_description: data.scholarship_description,
           scholarship_name: data.scholarship_name,
+          university_name: data.university_name,
+          university_image: data.university_image,
+          university_country: data.university_country,
+          university_city: data.university_city,
+          university_world_rank: data.university_world_rank,
+          subject_category: data.subject_category,
+          scholarship_category: data.scholarship_category,
+          degree: data.degree,
+          tuition_fees: data.tuition_fees,
+          application_fees: data.application_fees,
           service_charge: data.service_charge,
-          stipend: data.stipend,
-          subject_name: data.subject_name,
-          university_location: data.university_location,
+          application_deadline: data.application_deadline,
+          post_date: data.post_date,
+          scholarship_description: data.scholarship_description,
         },
       };
 
@@ -289,7 +335,7 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/users", async (req, res) => {
+    app.get("/users", logger, verifyToken, verifyAdmin, async (req, res) => {
       const result = await usersCollection.find().toArray();
       res.send(result);
     });
@@ -311,6 +357,21 @@ async function run() {
       res.send({ admin });
     });
 
+    app.get("/user/moderator/:email", logger, verifyToken, async (req, res) => {
+      const email = req.params.email;
+      if (email !== req.user.email) {
+        return res.status(403).send({ message: "unauthorized access" });
+      }
+
+      const query = { userEmail: email };
+      const user = await usersCollection.findOne(query);
+      let moderator = false;
+      if (user) {
+        moderator = user?.role === "moderator";
+      }
+      res.send({ moderator });
+    });
+
     app.get("/user", async (req, res) => {
       const email = req.query.email;
       const query = {
@@ -320,7 +381,7 @@ async function run() {
       res.send(result);
     });
 
-    app.put("/user", async (req, res) => {
+    app.put("/user", logger, verifyToken, verifyAdmin, async (req, res) => {
       const id = req.body.id;
       const filter = { _id: new ObjectId(id) };
       const updateDoc = {
