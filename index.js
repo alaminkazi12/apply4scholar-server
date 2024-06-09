@@ -41,6 +41,25 @@ const logger = async (req, res, next) => {
   next();
 };
 
+const verifyToken = async (req, res, next) => {
+  const toekn = req.cookies?.token;
+  console.log(req.cookies);
+  console.log("Value of the middleware", toekn);
+  if (!toekn) {
+    return res.status(401).send({ message: "not authorized" });
+  }
+  jwt.verify(toekn, process.env.TOKEN_SECRET, (err, decoded) => {
+    // err
+    if (err) {
+      console.log(err);
+      return res.status(401).send({ message: "not authorized" });
+    }
+    console.log("value in the token", decoded);
+    req.user = decoded;
+  });
+  next();
+};
+
 // jwt related api
 app.post("/jwt", logger, async (req, res) => {
   const user = req.body;
@@ -88,7 +107,7 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/scholarships/:id", async (req, res) => {
+    app.get("/scholarships/:id", logger, verifyToken, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await scholarshipsCollection.findOne(query);
@@ -141,7 +160,7 @@ async function run() {
 
     // application related api
 
-    app.post("/apply", async (req, res) => {
+    app.post("/apply", logger, verifyToken, async (req, res) => {
       const applicationData = req.body;
       const result = await applicationCollection.insertOne(applicationData);
       res.send(result);
@@ -274,6 +293,24 @@ async function run() {
       const result = await usersCollection.find().toArray();
       res.send(result);
     });
+
+    // check user role
+
+    app.get("/user/admin/:email", logger, verifyToken, async (req, res) => {
+      const email = req.params.email;
+      if (email !== req.user.email) {
+        return res.status(403).send({ message: "unauthorized accesss" });
+      }
+
+      const query = { userEmail: email };
+      const user = await usersCollection.findOne(query);
+      let admin = false;
+      if (user) {
+        admin = user?.role === "admin";
+      }
+      res.send({ admin });
+    });
+
     app.get("/user", async (req, res) => {
       const email = req.query.email;
       const query = {
@@ -304,20 +341,25 @@ async function run() {
     });
 
     // payment intent api
-    app.post("/create-payment-intent", async (req, res) => {
-      const { price } = req.body;
-      const amount = parseInt(price * 100);
-      const paymentIntent = await stripe.paymentIntents.create({
-        amount: amount,
-        currency: "usd",
-        payment_method_types: ["card"],
-      });
-      res.send({
-        clientSecret: paymentIntent.client_secret,
-      });
-    });
+    app.post(
+      "/create-payment-intent",
+      logger,
+      verifyToken,
+      async (req, res) => {
+        const { price } = req.body;
+        const amount = parseInt(price * 100);
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount: amount,
+          currency: "usd",
+          payment_method_types: ["card"],
+        });
+        res.send({
+          clientSecret: paymentIntent.client_secret,
+        });
+      }
+    );
 
-    app.post("/payments", async (req, res) => {
+    app.post("/payments", logger, verifyToken, async (req, res) => {
       const payment = req.body;
       const paymentResult = await paymnetCollection.insertOne(payment);
       res.send(paymentResult);
