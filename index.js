@@ -381,7 +381,14 @@ async function run() {
     });
 
     app.get("/users", logger, verifyToken, verifyAdmin, async (req, res) => {
-      const result = await usersCollection.find().toArray();
+      const { role } = req.query; // Extract role from query parameters
+      let query = {};
+
+      if (role) {
+        query.role = role; // Add role to the query if it exists
+      }
+
+      const result = await usersCollection.find(query).toArray();
       res.send(result);
     });
 
