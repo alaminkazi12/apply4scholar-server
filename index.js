@@ -14,12 +14,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      // "http://studyscribe-a50b5.web.app",
-      // "http://studyscribe-a50b5.firebaseapp.com",
-      // "https://studyscribe.netlify.app",
-    ],
+    origin: ["http://localhost:5173", "https://apply4scholar.netlify.app"],
     credentials: true,
   })
 );
