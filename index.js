@@ -137,6 +137,44 @@ async function run() {
       res.send(result);
     });
 
+    // app.get("/all-scholarships", async (req, res) => {
+    //   const result = await scholarshipsCollection.find().toArray();
+    //   res.send(result);
+    // });
+
+    app.get("/all-scholarships", async (req, res) => {
+      const page = parseInt(req.query.page) || 1;
+      const skip = (page - 1) * 9;
+      let query = {};
+
+      // Check if search query is provided
+      if (req.query.search) {
+        const searchRegex = new RegExp(req.query.search, "i");
+        query = {
+          $or: [
+            { scholarship_name: searchRegex },
+            { university_name: searchRegex },
+            { degree: searchRegex },
+          ],
+        };
+      }
+
+      const totalScholarships = await scholarshipsCollection.countDocuments(
+        query
+      );
+      const scholarships = await scholarshipsCollection
+        .find(query)
+        .skip(skip)
+        .limit(9)
+        .toArray();
+
+      res.json({
+        scholarships,
+        currentPage: page,
+        totalPages: Math.ceil(totalScholarships / 9),
+      });
+    });
+
     app.post(
       "/scholarship",
       logger,
@@ -318,6 +356,13 @@ async function run() {
       const id = req.body.id;
       const filter = { _id: new ObjectId(id) };
       const result = await reviewCollection.deleteOne(filter);
+      res.send(result);
+    });
+
+    app.get("/reviews-scholarship/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { scholarship_id: id };
+      const result = await reviewCollection.find(query).toArray();
       res.send(result);
     });
 
