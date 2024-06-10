@@ -80,7 +80,7 @@ app.post("/logout", async (req, res) => {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
 
     const apply4scholar = client.db("apply4scholar");
     const scholarshipsCollection = apply4scholar.collection("scholarships");
@@ -170,17 +170,11 @@ async function run() {
       });
     });
 
-    app.post(
-      "/scholarship",
-      logger,
-      verifyToken,
-      verifyAdminOrModerator,
-      async (req, res) => {
-        const query = req.body;
-        const result = await scholarshipsCollection.insertOne(query);
-        res.send(result);
-      }
-    );
+    app.post("/scholarship", logger, verifyToken, async (req, res) => {
+      const query = req.body;
+      const result = await scholarshipsCollection.insertOne(query);
+      res.send(result);
+    });
 
     app.get("/scholarships/:id", logger, verifyToken, async (req, res) => {
       const id = req.params.id;
@@ -201,7 +195,7 @@ async function run() {
       res.send(result);
     });
 
-    app.put("/scholarship", async (req, res) => {
+    app.put("/scholarship", logger, verifyToken, async (req, res) => {
       const data = req.body;
       console.log(data);
       const id = data.id;
@@ -230,7 +224,7 @@ async function run() {
       res.send(result);
     });
 
-    app.delete("/scholarship", async (req, res) => {
+    app.delete("/scholarship", logger, verifyToken, async (req, res) => {
       const id = req.body.id;
       const filter = { _id: new ObjectId(id) };
       const result = await scholarshipsCollection.deleteOne(filter);
@@ -245,7 +239,7 @@ async function run() {
       res.send(result);
     });
 
-    app.put("/apply/:id", async (req, res) => {
+    app.put("/apply/:id", logger, verifyToken, async (req, res) => {
       const id = req.params.id;
       const data = req.body;
       const filter = { _id: new ObjectId(id) };
@@ -265,19 +259,24 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/applications", async (req, res) => {
+    app.get("/applications", logger, verifyToken, async (req, res) => {
       const email = req.query.email;
       const query = { userEmail: email };
       const result = await applicationCollection.find(query).toArray();
       res.send(result);
     });
 
-    app.get("/all-applied-scholarships", async (req, res) => {
-      const result = await applicationCollection.find().toArray();
-      res.send(result);
-    });
+    app.get(
+      "/all-applied-scholarships",
+      logger,
+      verifyToken,
+      async (req, res) => {
+        const result = await applicationCollection.find().toArray();
+        res.send(result);
+      }
+    );
 
-    app.put("/feedback", async (req, res) => {
+    app.put("/feedback", logger, verifyToken, async (req, res) => {
       const data = req.body;
       const id = data.id;
       const feedback = data.feedback;
@@ -292,7 +291,7 @@ async function run() {
       res.send(result);
     });
 
-    app.put("/application-status", async (req, res) => {
+    app.put("/application-status", logger, verifyToken, async (req, res) => {
       const data = req.body;
       const id = data.id;
       const filter = { _id: new ObjectId(id) };
@@ -305,7 +304,7 @@ async function run() {
       res.send(result);
     });
 
-    app.delete("/application/:id", async (req, res) => {
+    app.delete("/application/:id", logger, verifyToken, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await applicationCollection.deleteOne(query);
@@ -319,20 +318,20 @@ async function run() {
       res.send(result);
     });
 
-    app.post("/review", async (req, res) => {
+    app.post("/review", logger, verifyToken, async (req, res) => {
       const review = req.body;
       const result = await reviewCollection.insertOne(review);
       res.send(result);
     });
 
-    app.get("/myreviews", async (req, res) => {
+    app.get("/myreviews", logger, verifyToken, async (req, res) => {
       const email = req.query.email;
       const query = { userEmail: email };
       const result = await reviewCollection.find(query).toArray();
       res.send(result);
     });
 
-    app.put("/reveiw", async (req, res) => {
+    app.put("/reveiw", logger, verifyToken, async (req, res) => {
       const data = req.body;
       const reviewid = data.id;
       const filter = { _id: new ObjectId(reviewid) };
@@ -347,22 +346,27 @@ async function run() {
       res.send(result);
     });
 
-    app.delete("/review", async (req, res) => {
+    app.delete("/review", logger, verifyToken, async (req, res) => {
       const id = req.body.id;
       const filter = { _id: new ObjectId(id) };
       const result = await reviewCollection.deleteOne(filter);
       res.send(result);
     });
 
-    app.get("/reviews-scholarship/:id", async (req, res) => {
-      const id = req.params.id;
-      const query = { scholarship_id: id };
-      const result = await reviewCollection.find(query).toArray();
-      res.send(result);
-    });
+    app.get(
+      "/reviews-scholarship/:id",
+      logger,
+      verifyToken,
+      async (req, res) => {
+        const id = req.params.id;
+        const query = { scholarship_id: id };
+        const result = await reviewCollection.find(query).toArray();
+        res.send(result);
+      }
+    );
 
     //  users related api
-    app.post("/users", async (req, res) => {
+    app.post("/users", logger, verifyToken, async (req, res) => {
       const user = req.body;
       console.log(req.headers);
       const query = { userEmail: user.userEmail };
@@ -474,7 +478,7 @@ async function run() {
     });
 
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
