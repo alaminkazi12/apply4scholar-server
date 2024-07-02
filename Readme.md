@@ -1,5 +1,7 @@
 # Apply4Scholar Server
 
+Server Link: https://apply4scholar-server.vercel.app/
+
 This is the server for the Apply4Scholar client, a scholarship management platform. The server is built using MongoDB, Express.js, JWT tokens, and Node.js.
 
 ## Project Overview
