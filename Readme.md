@@ -1,18 +1,24 @@
-Apply4Scholar Server
+# Apply4Scholar Server
+
 This is the server for the Apply4Scholar client, a scholarship management platform. The server is built using MongoDB, Express.js, JWT tokens, and Node.js.
 
-Features
-User authentication with JWT tokens
-CRUD operations for managing scholarship applications
-Integration with MongoDB for data storage
-RESTful API endpoints for client interactions
-Getting Started
-Prerequisites
-Make sure you have the following installed on your machine:
+## Project Overview
 
-Node.js
-npm (Node Package Manager)
-MongoDB
+The Apply4Scholar server provides the backend functionality for the Apply4Scholar client application. It manages data storage, user authentication, and CRUD operations for scholarship applications, ensuring seamless interaction between the client and server.
+
+## Features
+
+- **User Authentication**: Secure user authentication using JWT tokens.
+- **CRUD Operations**: Create, read, update, and delete scholarship applications.
+- **Data Storage**: Integration with MongoDB for efficient data storage.
+- **RESTful API**: Provides RESTful API endpoints for client interactions.
+
+## Technologies Used
+
+- Node.js
+- Express.js
+- MongoDB
+- JWT for token verification
 
 ## Steps to Clone and Run Locally
 
